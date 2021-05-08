@@ -1,0 +1,66 @@
+---
+title: "454 Project"
+author: "Hoseung Baek"
+date: "4/25/2021"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Libraries. Initial Dataset. Preparing Data for model.
+```{r}
+# install.packages("readxl")
+library(readxl)
+library(dplyr, warn.conflicts = FALSE)
+library(ggplot2)
+
+movies.df <- readxl::read_excel("C:\\Users\\hsbae\\Documents\\tv_shows.xlsx") 
+
+movies.df <- mutate(movies.df,R_Tomatoes=Rotten.Tomatoes *10)
+movies.df <- subset(movies.df, select=c(Index, Title, Year, Age,IMDb,R_Tomatoes,Netflix,Hulu,Prime.Video,Disney.))
+movies.df$Netflix=as.factor(movies.df$Netflix)
+movies.df$Hulu=as.factor(movies.df$Hulu)
+movies.df$Disney.=as.factor(movies.df$Disney.)
+movies.df$Prime.Video=as.factor(movies.df$Prime.Video)
+movies.df$Index <- NULL
+movies.df$Title <- NULL
+movies.df <- movies.df[complete.cases(movies.df),]
+movies.df$Age=as.factor(movies.df$Age)
+summary(movies.df)
+
+head(movies.df)
+class(movies.df$Year)
+table(movies.df$Age)
+```
+Graphical Overview.Implication Stage and Predictive Model preprocess. Code might not make much sense but just a plan phase.
+```{r}
+hist(movies.df$IMDb)
+hist(movies.df$R_Tomatoes)
+
+boxplot(movies.df$IMDb~movies.df$Age, xlab="Age", ylab="IMDb", main="The distribution of AGE and IMDb")
+
+ggplot(data = movies.df, mapping = aes(x =IMDb, y = R_Tomatoes)) + geom_point() +  geom_smooth(method = "lm", color="black", show.legend = FALSE)
+
+```
+Predictive Model.Preparing Data. 60/40
+```{r}
+trainingSet <- movies.df[1:559, 3:4]
+testSet <- movies.df[560:931, 3:4]
+
+trainingOutcomes <- movies.df[1:559, 8]
+trainingOutcomes <- trainingOutcomes$Disney.
+trainingOutcomes
+
+testOutcomes <- movies.df[560:931, 8]
+testOutcomes <- testOutcomes$Disney.
+testOutcomes
+
+
+library(class)
+predictions <- knn(train = trainingSet, cl = trainingOutcomes, k = 30 ,test = testSet)
+
+table(testOutcomes, predictions)
+```
